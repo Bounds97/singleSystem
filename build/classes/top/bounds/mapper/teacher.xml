@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 表示命名空间是config，在后续调用sql语句的时候，会用到它 -->
+<mapper namespace="top.bounds.mapper.TeacherMapper">
+	<!-- 查询所有 -->
+	<select id="listTeacher" resultType="Teacher">
+		select * from teacher 
+		<if test="start!=null and limit!=null">
+			limit #{start},#{limit}
+		</if>
+	</select>
+	<!-- 查询总数 -->
+	<select id="total" resultType="_int">
+            select count(*) from teacher     
+        </select>
+	<!-- 根据id查找 -->
+	<select id="selectById" resultType="Teacher" parameterType="_int">
+		select * from teacher where id = #{id}
+	</select>
+	<!-- 根据id查询总数  -->
+	<select id="selectCountById" resultType="_int" parameterType="_int">
+		select count(*) from teacher where id = #{id}
+	</select>
+	<!-- 修改一条记录 -->
+	<update id="updateTeacher" parameterType="Teacher">
+		update teacher set name=#{name} where id=#{id}
+	</update>
+	<!-- 删除一条记录 -->
+	<delete id="deleteTeacher" parameterType="_int">
+		delete from teacher where id=#{id}
+	</delete>
+	<!-- 插入一条记录 -->
+	<insert id="addTeacher" parameterType="Teacher">
+		insert into teacher(name) values(#{name})
+	</insert>
+</mapper>

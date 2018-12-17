@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="layui/css/layui.css" media="all">
+		<script src="js/jquery.min.js" charset="utf-8"></script>
+		<script src="layui/layui.js" charset="utf-8"></script>
+		<title></title>
+	</head>
+	<body>
+		<div style="text-align: center;">
+			<div class="layui-inline">
+				<div class="demoTable">
+					搜索ID：
+					<div class="layui-inline">
+						<input class="layui-input" name="id" id="teacherId" autocomplete="off">
+					</div>
+					<button class="layui-btn" data-type="reload">搜索</button>
+				</div>
+				<!-- 定义一个数据表格 id="test"-->
+				<table class="layui-hide" id="test" lay-filter="test"></table>
+				<!-- 定义一个新增的form表单且是隐藏的，弹出时才显示  id="addTeacher"唯一标签-->
+				<div class="layui-row" id="addTeacher" style="display: none;">
+					<form class="layui-form layui-form-pane" action="">
+						<div class="layui-form-item">
+							<label class="layui-form-label">ID：</label>
+							<div class="layui-input-inline">
+								<input type="text" name="id" placeholder="请输入" autocomplete="off" class="layui-input">
+							</div>
+						</div>
+						<div class="layui-form-item">
+							<label class="layui-form-label">名称：</label>
+							<div class="layui-input-inline">
+								<input type="text" name="name" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+							</div>
+						</div>
+						<div class="layui-form-item">
+							<button type="button" class="layui-btn" lay-submit="" lay-filter="demo2">提交</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- 开启头部工具栏 -->
+		<script type="text/html" id="toolbarDemo">
+			<div class="layui-btn-container">
+				<button class="layui-btn layui-btn-sm" lay-event="add">新增</button>
+  		</div>
+		</script>
+		<!-- 定义数据表格内删除编辑按钮 -->
+		<script type="text/html" id="barDemo">
+			<a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+			<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+		</script>
+
+		<script>
+			/* 告诉layui我要使用table、form模块 */
+			layui.use(['table', 'form'], function() {
+				var table = layui.table;
+				var form = layui.form;
+				/* 创建一个表格实例 */
+				table.render({
+					/* 对应html中定义的那个数据表格 id="test" */
+					elem: '#test',
+					/* 请求后台的数据接口 ，该数据接口返回的是json数据，且一定要遵循layui的json格式约束 */
+					url: 'teacher',
+					/* 开启头部工具栏  */
+
+					toolbar: '#toolbarDemo',
+					limits: [5, 10, 15, 20],
+					/* 数据表格标题 */
+					title: '用户数据表',
+					/* 表格显示的数据 */
+					cols: [
+						[{
+							type: 'checkbox',
+							fixed: 'left'
+						}, {
+							field: 'id',
+							title: 'ID',
+							width: 80,
+							fixed: 'left',
+							unresize: true,
+							sort: true
+						}, {
+							field: 'name',
+							title: '用户名',
+							width: 120,
+							edit: 'text'
+						}, {
+							title: '操作',
+							toolbar: '#barDemo',
+							width: 150
+						}]
+					],
+					/* 是否开始分页  layui会自动帮你实现分页（向后台传递page和limit分页的值）你只需要在后台定义相关的分页实现即可 */
+					page: true,
+					/* 设置表格重载id */
+					id: 'teacherReload',
+					//固定大小 
+					height: 400,
+					width: 540
+				});
+				//头工具栏事件
+				table.on('toolbar(test)', function(obj) {
+					var checkStatus = table.checkStatus(obj.config.id);
+					switch (obj.event) {
+						case 'add':
+							layer.open({
+								//layer提供了5种层类型。可传入的值有：0（信息框，默认）1（页面层）2（iframe层）3（加载层）4（tips层）
+								type: 1,
+								title: "新增",
+								//设置放大与缩小 
+								maxmin: true,
+								/* 定义该弹出页面层的大小 可以是px，也可以是% */
+								area: ['auto', 'auto'],
+								/* 打开html中需要弹出的form表单 id="addTeacher" */
+								content: $("#addTeacher").html(),
+							});
+							break;
+					};
+				});
+				/* 监听form表单提交事件 data表示form表单中的所有数据集合 */
+				form.on('submit(demo2)', function(data) {
+					/* ajax提交数据 */
+					$.ajax({
+						/* 提交到后台的接口  */
+						url: 'teacher',
+						/* 提交方式 */
+						method: 'post',
+						//设置请求参数类型为json字符串
+						contentType:"application/json",
+						/* data.field表示提交form表单中的所有元素，转换成json对象的字符串传入后台*/
+						data: JSON.stringify(data.field),
+						/* 数据为json格式 */
+						dataType: 'JSON',
+						/* 后台返回的json数据 这里只返回了一个status状态码  */
+						success: function(result) {
+							if (result.status == 1) {
+								/* 关闭该弹出框 */
+								layer.closeAll();
+								layer.msg("新增成功", {
+									icon: 6
+								});
+							} else {
+								layer.msg("新增失败", {
+									icon: 5
+								});
+							}
+						}
+					});
+				});
+				var $ = layui.$,
+					active = {
+						reload: function() {
+							var teacherId = $('#teacherId');
+							//执行重载
+							table.reload('teacherReload', {
+								/* 提交到后台的接口  */
+								url: 'teacher/'+teacherId.val(),
+								page: {
+									curr: 1 //重新从第 1 页开始
+								}
+							});
+						}
+					};
+				$('.demoTable .layui-btn').on('click', function() {
+					var type = $(this).data('type');
+					active[type] ? active[type].call(this) : '';
+				});
+				//监听行工具事件 obj表示数据表格的所有数据集合 
+				table.on('tool(test)', function(obj) {
+					var data = obj.data;
+					if (obj.event === 'del') {
+						/* layui的提示框 */
+						layer.confirm('真的删除行么', function(index) {
+							/* ajax方式提交数据 */
+							$.ajax({
+								/* 提交到后台的接口  */
+								url: "teacher/" + data.id,
+								/* 提交方式为post */
+								type: "DELETE",
+								/* 数据为json格式 */
+								dataType: "json",
+								/* 后台返回的json数据 这里只返回了一个status状态码  */
+								success: function(result) {
+									if (result.status == 1) {
+										// 同步删除表格和缓存对应的值
+										obj.del();
+										/* 关闭弹出框 */
+										layer.close(index);
+										layer.msg("删除成功", {
+											icon: 6
+										});
+									} else {
+										layer.msg("删除失败", {
+											icon: 5
+										});
+									}
+								}
+							});
+						});
+					} else if (obj.event === 'edit') {
+						layer.prompt({
+							formType: 2,
+							/* 获取原来的name值 */
+							value: data.name
+						}, function(value, index) {
+							var teacherData = {"name": value, "id": data.id};
+							$.ajax({
+								/* 提交到后台的接口  */
+								url: "teacher",
+								type: "PUT",
+								//设置请求参数类型为json字符串
+								contentType:"application/json",
+								/*将teacherData的json格式转换成json对象的字符串传入后台 */
+								data: JSON.stringify(teacherData),
+								dataType: "json",
+								success: function(result) {
+									if (result.status == 1) {
+										layer.close(index);
+										//同步更新表格和缓存对应的值
+										obj.update({
+											/* 将修改的name赋值到数据表格中 */
+											name: value
+										});
+										layer.msg("修改成功", {
+											icon: 6
+										});
+									} else {
+										layer.msg("修改失败", {
+											icon: 5
+										});
+									}
+								}
+
+							});
+						});
+					}
+				});
+			});
+		</script>
+	</body>
+</html>
